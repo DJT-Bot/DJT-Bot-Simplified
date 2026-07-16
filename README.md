@@ -1,2 +1,2 @@
-# DJT-Bot-Stripped
-A stripped down version of the DJT bot, with major focus on the Reddit feed.
+# DJT-Bot Simplified
+A simplified revision of the DJT Discord bot, with major focus on smaller and simpler features. 
