@@ -1,4 +1,5 @@
-const { Client, GatewayIntentBits, Events, ActivityType } = require('discord.js');
+const { Client, GatewayIntentBits, Events, ActivityType, MessageFlags } = require('discord.js');
+const { GoogleGenAI } = require('@google/genai');
 const fs = require('fs');
 const path = require('path');
 const Parser = require('rss-parser');
@@ -8,11 +9,13 @@ const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
 });
 
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
 const parser = new Parser({
-    headers: { 'User-Agent': 'DJT-Bot-Simple/1.0 ()' }
+    headers: { 'User-Agent': 'DJT-Bot-Simple/1.0 (by krispenwah)' }
 });
 
-const FEED_URL = '';
+const FEED_URL = 'https://www.reddit.com/r/CrackWatch/new/.rss';
 const DATA_PATH = path.join(__dirname, 'data', 'redditfeed.json');
 
 async function checkRedditFeed() {
@@ -28,7 +31,7 @@ async function checkRedditFeed() {
         if (postDate > lastSeen) {
             const channel = await client.channels.fetch(process.env.CHANNEL_ID);
             if (channel) {
-                channel.send(`**${latestPost.title}**\n${latestPost.link}`);
+                channel.send(`New post from r/CrackWatch: **${latestPost.title}**\n${latestPost.link}`);
             }
             data.lastSeen = latestPost.isoDate;
             fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
@@ -54,7 +57,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     if (interaction.commandName === 'about') {
-        await interaction.reply('A simplified revision of the DJT Discord bot. Revised by [Krispy](https://guns.lol/krispenwah). Source code available on [GitHub](https://github.com/DJT-Bot/DJT-Bot-Simplified).');
+        await interaction.reply({ 
+            content: 'A simplified revision of the DJT Discord bot. Revised by [Krispy](https://guns.lol/krispenwah). Source code available on [GitHub](https://github.com/DJT-Bot/DJT-Bot-Simplified).',
+            flags: [MessageFlags.SuppressEmbeds] 
+        });
     }
 
     if (interaction.commandName === 'uptime') {
@@ -63,6 +69,33 @@ client.on(Events.InteractionCreate, async (interaction) => {
         const m = Math.floor((seconds % 3600) / 60);
         const s = seconds % 60;
         await interaction.reply(`I've been playing golf for: ${h}h ${m}m ${s}s`);
+    }
+
+    if (interaction.commandName === 'ask') {
+        await interaction.deferReply();
+        const prompt = interaction.options.getString('prompt');
+
+        try {
+            const response = await ai.models.generateContent({
+                model: 'gemini-3.1-flash-lite',
+                contents: prompt,
+                config: {
+                    systemInstruction: "Your persona is based on Donald J. Trump, the 45th President of the United States. You will respond in a manner that reflects his speaking style, opinions, and personality traits. Your responses should be confident, assertive, and often boastful, while also being persuasive and sometimes controversial. You will always respond in Donald Trump's tone and manner.",
+                },
+            });
+
+            const responseText = response.text;
+            const finalMessage = `> ${prompt}\n\n${responseText}`;
+
+            if (finalMessage.length > 2000) {
+                await interaction.editReply(finalMessage.substring(0, 1999));
+            } else {
+                await interaction.editReply(finalMessage);
+            }
+        } catch (err) {
+            console.error('Gemini API Error:', err);
+            await interaction.editReply('Damn, Gemini is fucked right now. Sorry!');
+        }
     }
 });
 
