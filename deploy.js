@@ -5,8 +5,8 @@ const commands = [
     new SlashCommandBuilder()
         .setName('about')
         .setDescription('Shows bot info')
-        .setIntegrationTypes([0, 1]) // 0: Guild, 1: User Install
-        .setContexts([0, 1, 2]),       // 0: Guild, 1: Bot DMs, 2: Private Channels
+        .setIntegrationTypes([0, 1])
+        .setContexts([0, 1, 2]),
         
     new SlashCommandBuilder()
         .setName('uptime')
@@ -16,7 +16,7 @@ const commands = [
 
     new SlashCommandBuilder()
         .setName('ask')
-        .setDescription('Ask Gemini something.')
+        .setDescription('Ask Mr. President something.')
         .addStringOption(option =>
             option
                 .setName('prompt')
