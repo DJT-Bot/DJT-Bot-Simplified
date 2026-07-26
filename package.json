@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "A simplified revision of the DJT Discord bot.",
   "dependencies": {
+    "@google/genai": "^2.13.0",
     "dotenv": "^17.4.2",
     "rss-parser": "^3.13.0"
   }
