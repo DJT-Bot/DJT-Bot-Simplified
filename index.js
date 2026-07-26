@@ -12,10 +12,10 @@ const client = new Client({
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const parser = new Parser({
-    headers: { 'User-Agent': 'DJT-Bot-Simple/1.0 (by krispenwah)' }
+    headers: { 'User-Agent': 'DJT-Bot-Simple/1.0 ()' }
 });
 
-const FEED_URL = 'https://www.reddit.com/r/CrackWatch/new/.rss';
+const FEED_URL = '';
 const DATA_PATH = path.join(__dirname, 'data', 'redditfeed.json');
 
 async function checkRedditFeed() {
@@ -31,7 +31,7 @@ async function checkRedditFeed() {
         if (postDate > lastSeen) {
             const channel = await client.channels.fetch(process.env.CHANNEL_ID);
             if (channel) {
-                channel.send(`New post from r/CrackWatch: **${latestPost.title}**\n${latestPost.link}`);
+                channel.send(`**${latestPost.title}**\n${latestPost.link}`);
             }
             data.lastSeen = latestPost.isoDate;
             fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
@@ -45,7 +45,7 @@ client.once(Events.ClientReady, (c) => {
     console.log(`Logged in as ${c.user.tag}`);
     
     client.user.setPresence({
-        activities: [{ name: 'Watching the Freak Shack', type: ActivityType.Watching }],
+        activities: [{ name: '', type: ActivityType.Watching }],
         status: 'online',
     });
 
