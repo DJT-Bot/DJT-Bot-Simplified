@@ -45,8 +45,8 @@ client.once(Events.ClientReady, (c) => {
     console.log(`Logged in as ${c.user.tag}`);
     
     client.user.setPresence({
-        activities: [{ name: '', type: ActivityType.Watching }],
-        status: 'online',
+        activities: [{ name: '', type: ActivityType.Playing }],
+        status: 'idle',
     });
 
     checkRedditFeed();
@@ -58,7 +58,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     if (interaction.commandName === 'about') {
         await interaction.reply({ 
-            content: 'A simplified revision of the DJT Discord bot. Revised by [Krispy](https://guns.lol/krispenwah). Source code available on [GitHub](https://github.com/DJT-Bot/DJT-Bot-Simplified).',
+            content: '',
             flags: [MessageFlags.SuppressEmbeds] 
         });
     }
@@ -77,10 +77,28 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
         try {
             const response = await ai.models.generateContent({
-                model: 'gemini-3.1-flash-lite',
+                model: '',
                 contents: prompt,
                 config: {
-                    systemInstruction: "Your persona is based on Donald J. Trump, the 45th President of the United States. You will respond in a manner that reflects his speaking style, opinions, and personality traits. Your responses should be confident, assertive, and often boastful, while also being persuasive and sometimes controversial. You will always respond in Donald Trump's tone and manner.",
+                    systemInstruction: "",
+                    safetySettings: [
+                        {
+                            category: 'HARM_CATEGORY_HARASSMENT',
+                            threshold: 'BLOCK_NONE',
+                        },
+                        {
+                            category: 'HARM_CATEGORY_HATE_SPEECH',
+                            threshold: 'BLOCK_NONE',
+                        },
+                        {
+                            category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+                            threshold: 'BLOCK_NONE',
+                        },
+                        {
+                            category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                            threshold: 'BLOCK_NONE',
+                        }
+                    ],
                 },
             });
 
