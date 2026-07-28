@@ -11,7 +11,10 @@
   "description": "A simplified revision of the DJT Discord bot.",
   "dependencies": {
     "@google/genai": "^2.13.0",
+    "discord-rpc": "^4.0.1",
+    "discord.js": "^14.27.0",
     "dotenv": "^17.4.2",
+    "pm2": "^7.0.3",
     "rss-parser": "^3.13.0"
   }
 }
