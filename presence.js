@@ -1,13 +1,13 @@
 const RPC = require("discord-rpc");
 const pm2 = require("pm2");
 
-const clientId = "1481669136164851762";
+const clientId = "";
 const BOT_NAME = "djt-bot";
 
 const rpc = new RPC.Client({ transport: "ipc" });
 
 rpc.on("ready", () => {
-    console.log("PiClinton presence connected.");
+    console.log("");
 
     updatePresence();
 
@@ -46,11 +46,11 @@ function updatePresence() {
             const memoryMB = Math.round(bot.monit.memory / 1024 / 1024);
 
             rpc.setActivity({
-                details: "PiClinton",
-                state: `DJT Bot: ${status} | CPU ${cpu}% | RAM ${memoryMB}MB`,
+                details: "",
+                state: `${status} | CPU ${cpu}% | RAM ${memoryMB}MB`,
                 startTimestamp: uptime,
-                largeImageKey: "bot",
-                largeImageText: "Raspberry Pi Bot Server",
+                largeImageKey: "",
+                largeImageText: "",
                 instance: false
             });
 
