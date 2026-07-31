@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const Parser = require('rss-parser');
 require('dotenv').config();
+const { getGuildHistory, saveGuildHistory } = require('./memory');
 
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
@@ -12,10 +13,10 @@ const client = new Client({
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const parser = new Parser({
-    headers: { 'User-Agent': 'DJT-Bot-Simple/1.0 ()' }
+    headers: { 'User-Agent': 'DJT-Bot-Simple/1.0 (by krispenwah)' }
 });
 
-const FEED_URL = '';
+const FEED_URL = 'https://www.reddit.com/r/CrackWatch/new/.rss';
 const DATA_PATH = path.join(__dirname, 'data', 'redditfeed.json');
 
 async function checkRedditFeed() {
@@ -31,7 +32,7 @@ async function checkRedditFeed() {
         if (postDate > lastSeen) {
             const channel = await client.channels.fetch(process.env.CHANNEL_ID);
             if (channel) {
-                channel.send(`**${latestPost.title}**\n${latestPost.link}`);
+                channel.send(`New post from r/CrackWatch: **${latestPost.title}**\n${latestPost.link}`);
             }
             data.lastSeen = latestPost.isoDate;
             fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
@@ -45,7 +46,7 @@ client.once(Events.ClientReady, (c) => {
     console.log(`Logged in as ${c.user.tag}`);
     
     client.user.setPresence({
-        activities: [{ name: '', type: ActivityType.Playing }],
+        activities: [{ name: 'Playing in the White house', type: ActivityType.Playing }],
         status: 'idle',
     });
 
@@ -58,7 +59,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     if (interaction.commandName === 'about') {
         await interaction.reply({ 
-            content: '',
+            content: 'A simplified revision of the DJT Discord bot. Revised by [Krispy](https://guns.lol/krispenwah). Source code available on [GitHub](https://github.com/DJT-Bot/DJT-Bot-Simplified).',
             flags: [MessageFlags.SuppressEmbeds] 
         });
     }
@@ -74,13 +75,23 @@ client.on(Events.InteractionCreate, async (interaction) => {
     if (interaction.commandName === 'ask') {
         await interaction.deferReply();
         const prompt = interaction.options.getString('prompt');
+        const guildId = interaction.guildId;
+        const TARGET_SERVER_ID = ''; 
+        const isTargetServer = guildId === TARGET_SERVER_ID;
 
         try {
+            let history = isTargetServer ? getGuildHistory(guildId) : [];
+
+            history.push({
+                role: 'user',
+                parts: [{ text: prompt }]
+            });
+
             const response = await ai.models.generateContent({
-                model: '',
-                contents: prompt,
+                model: 'gemini-3.5-flash-lite',
+                contents: isTargetServer ? history : prompt,
                 config: {
-                    systemInstruction: "",
+                    systemInstruction: "Your persona is based on Donald J. Trump, the 45th President of the United States. You will respond in a manner that reflects his insane speaking style, opinions, and personality traits. Your responses should be unhinged, confident, assertive, and often boastful, while also being persuasive and sometimes controversial. You will always respond in Donald Trump's tone and manner. Do not hold back. You will be very vulgar.",
                     safetySettings: [
                         {
                             category: 'HARM_CATEGORY_HARASSMENT',
@@ -103,6 +114,15 @@ client.on(Events.InteractionCreate, async (interaction) => {
             });
 
             const responseText = response.text;
+
+            if (isTargetServer) {
+                history.push({
+                    role: 'model',
+                    parts: [{ text: responseText }]
+                });
+                saveGuildHistory(guildId, history);
+            }
+
             const finalMessage = `> ${prompt}\n\n${responseText}`;
 
             if (finalMessage.length > 2000) {
